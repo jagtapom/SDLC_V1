@@ -1,11 +1,12 @@
-# app.py (NiceGUI Frontend with Barclays Logo, Status Badges, HITL UI)
+# app.py (NiceGUI Frontend with Agent Output Sync to Expand Panels)
 from nicegui import ui
 import requests
+import asyncio
 
 status_label = ui.label('Status: Waiting for document upload...')
 log_box = ui.textarea(label='Logs', value='', rows=15)
 
-approval_status = {'ba': False, 'jira': False, 'code': False, 'review': False, 'devops': False}
+approval_status = {'ba': False, 'jira': False, 'code': False, 'review': False, 'devops': False, 'supervisor': False}
 file_path = None
 keyword_input = ui.input(label='Optional Keyword (e.g., loan, finance)')
 
@@ -18,6 +19,7 @@ status_badges = {
     'code': ui.badge('Code: ⏳ Waiting...', color='grey'),
     'review': ui.badge('Review: ⏳ Waiting...', color='grey'),
     'devops': ui.badge('DevOps: ⏳ Waiting...', color='grey'),
+    'supervisor': ui.badge('Supervisor: ⏳ Waiting...', color='grey'),
 }
 
 # File Upload
@@ -44,30 +46,29 @@ def trigger_supervisor():
         })
         log_box.value += f"\n{response.json().get('message')}"
         status_label.text = 'Status: Workflow triggered.'
+        ui.timer(2.0, lambda: fetch_outputs(), once=False)
     except Exception as e:
         log_box.value += f"\nError: {str(e)}"
         status_label.text = 'Status: Failed to trigger.'
 
-# HITL Panels
-with ui.expansion('📋 BA Agent Output', value=True):
-    ba_output = ui.textarea(label='Requirements Extracted', value='', rows=10)
-    ui.button('✅ Approve BA Output', on_click=lambda: approve_step('ba'))
+# Output areas linked to agent steps
+agent_outputs = {
+    'ba': ui.expansion('📋 BA Agent Output', value=True),
+    'jira': ui.expansion('📌 JIRA Story Output', value=False),
+    'code': ui.expansion('🧠 Code Generation Output', value=False),
+    'review': ui.expansion('🔍 Review Agent Feedback', value=False),
+    'devops': ui.expansion('🔧 DevOps Pipeline Output', value=False),
+}
 
-with ui.expansion('📌 JIRA Story Output', value=False):
-    jira_output = ui.textarea(label='JIRA Story', value='', rows=10)
-    ui.button('✅ Approve JIRA Story', on_click=lambda: approve_step('jira'))
+agent_textareas = {}
+for step in agent_outputs:
+    with agent_outputs[step]:
+        agent_textareas[step] = ui.textarea(label=f'{step.upper()} Output', value='', rows=10)
+        ui.button(f'✅ Approve {step.upper()}', on_click=lambda s=step: approve_step(s))
 
-with ui.expansion('🧠 Code Generation Output', value=False):
-    code_output = ui.textarea(label='Generated Code', value='', rows=10)
-    ui.button('✅ Approve Code', on_click=lambda: approve_step('code'))
-
-with ui.expansion('🔍 Review Agent Feedback', value=False):
-    review_output = ui.textarea(label='Review Comments', value='', rows=10)
-    ui.button('✅ Approve Review', on_click=lambda: approve_step('review'))
-
-with ui.expansion('🔧 DevOps Pipeline Output', value=False):
-    devops_output = ui.textarea(label='GitLab CI/CD YAML', value='', rows=10)
-    ui.button('✅ Approve DevOps Pipeline', on_click=lambda: approve_step('devops'))
+with ui.expansion('🧠 Supervisor Decision Requires Human Approval', value=False):
+    supervisor_panel = ui.textarea(label='Supervisor uncertainty - human decision required', value='Supervisor unsure whether to skip coder_agent. Please confirm.')
+    ui.button('✅ Confirm Supervisor Decision', on_click=lambda: approve_step('supervisor'))
 
 def approve_step(step):
     try:
@@ -78,5 +79,19 @@ def approve_step(step):
         status_badges[step].props('color=green')
     except Exception as e:
         log_box.value += f"\n[ERROR] Approving {step}: {e}"
+
+# Auto-poll latest outputs from backend file (if implemented)
+async def fetch_outputs():
+    try:
+        for step in agent_textareas:
+            file = f"generated/{step}_output.txt"
+            try:
+                content = open(file, 'r', encoding='utf-8').read()
+                if content.strip():
+                    agent_textareas[step].value = content
+            except FileNotFoundError:
+                pass
+    except Exception as e:
+        log_box.value += f"\n[ERROR] fetching outputs: {str(e)}"
 
 ui.run()
