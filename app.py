@@ -1,7 +1,8 @@
-# app.py (NiceGUI Frontend with Agent Output Sync to Expand Panels)
+# app.py (NiceGUI Frontend with Diagram Viewer and Download)
 from nicegui import ui
 import requests
 import asyncio
+import base64
 
 status_label = ui.label('Status: Waiting for document upload...')
 log_box = ui.textarea(label='Logs', value='', rows=15)
@@ -22,7 +23,6 @@ status_badges = {
     'supervisor': ui.badge('Supervisor: ⏳ Waiting...', color='grey'),
 }
 
-# File Upload
 uploaded_file = ui.upload(label='Upload PDF/DOCX/TXT', on_upload=lambda e: handle_upload(e))
 
 def handle_upload(e):
@@ -32,7 +32,6 @@ def handle_upload(e):
         f.write(e.content.read())
     status_label.text = f'Status: Uploaded {e.name}'
 
-# Trigger Workflow
 ui.button('🚀 Start SDLC Workflow', on_click=lambda: trigger_supervisor())
 
 def trigger_supervisor():
@@ -51,7 +50,6 @@ def trigger_supervisor():
         log_box.value += f"\nError: {str(e)}"
         status_label.text = 'Status: Failed to trigger.'
 
-# Output areas linked to agent steps
 agent_outputs = {
     'ba': ui.expansion('📋 BA Agent Output', value=True),
     'jira': ui.expansion('📌 JIRA Story Output', value=False),
@@ -70,6 +68,21 @@ with ui.expansion('🧠 Supervisor Decision Requires Human Approval', value=Fals
     supervisor_panel = ui.textarea(label='Supervisor uncertainty - human decision required', value='Supervisor unsure whether to skip coder_agent. Please confirm.')
     ui.button('✅ Confirm Supervisor Decision', on_click=lambda: approve_step('supervisor'))
 
+# ✅ Add Diagram Viewer and Download
+with ui.expansion('📊 Requirement Diagram (Mermaid)', value=False):
+    diagram_box = ui.textarea(label='Mermaid Diagram Code', value='', rows=15)
+
+    def download_diagram():
+        try:
+            with open('generated/requirement_diagram.mmd', 'r') as f:
+                content = f.read()
+            b64 = base64.b64encode(content.encode()).decode()
+            ui.download(text=content, filename='requirement_diagram.mmd', mime_type='text/plain')
+        except FileNotFoundError:
+            log_box.value += "\n[WARN] Diagram file not found."
+
+    ui.button('📥 Download Mermaid Diagram', on_click=download_diagram)
+
 def approve_step(step):
     try:
         requests.post('http://localhost:8000/approve-step', json={'step': step})
@@ -80,7 +93,6 @@ def approve_step(step):
     except Exception as e:
         log_box.value += f"\n[ERROR] Approving {step}: {e}"
 
-# Auto-poll latest outputs from backend file (if implemented)
 async def fetch_outputs():
     try:
         for step in agent_textareas:
@@ -91,6 +103,14 @@ async def fetch_outputs():
                     agent_textareas[step].value = content
             except FileNotFoundError:
                 pass
+
+        # Load diagram if available
+        try:
+            with open("generated/requirement_diagram.mmd", "r") as df:
+                diagram_box.value = df.read()
+        except FileNotFoundError:
+            pass
+
     except Exception as e:
         log_box.value += f"\n[ERROR] fetching outputs: {str(e)}"
 
