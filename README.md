@@ -6,25 +6,38 @@ This project automates the Software Development Life Cycle (SDLC) using a multi-
 
 ## 📂 Project Structure
 ```
-project_root/
+sdlc-genai-automation/
+├── main.py                        # 🚀 FastAPI backend entry point
+├── requirements.txt              # 📦 Python dependencies
+
 ├── frontend/
-│   └── app.py                  # NiceGUI frontend (file upload, HITL approval, status)
+│   └── app.py                    # 🎨 NiceGUI UI: upload doc, approve HITL, live status
+
+├── uploaded_files/               # 📁 Temp directory for uploaded documents
+├── generated/                    # 📁 Output directory (requirements, stories, diagrams)
+
 ├── src/
-│   ├── agents/                # AutoGen agents
-│   │   ├── ba_agent.py        # Extracts requirements
-│   │   ├── jira_agent.py      # Creates JIRA stories
-│   │   ├── coder_agent.py     # Generates code
-│   │   ├── review_agent.py    # Reviews code
-│   │   ├── devops_agent.py    # Builds GitLab CI/CD pipeline
-│   │   ├── supervisor_agent.py# Delegates steps
-│   │   └── hitl_agent.py      # HITL agent for approvals
-│   ├── orchestrator.py        # Runs the multi-step async workflow
-│   ├── document_processor.py  # Extracts and filters document input
-│   ├── diagram_generator.py   # Generates Mermaid diagrams from text
-│   ├── confluence_uploader.py # Publishes diagrams to Confluence via REST API
-│   └── config/
-│       └── settings.py        # LLM_CONFIG: model="bedrock.claude-v2"
-└── main.py                    # FastAPI backend (used for workflow endpoints)
+│   ├── orchestrator.py           # 🔁 Async controller for running agent pipeline
+│   ├── document_processor.py     # 📄 Extracts content from uploaded files (PDF, DOCX, TXT)
+│   ├── diagram_generator.py      # 📈 Builds Mermaid diagram from stories
+│   ├── confluence_uploader.py    # 🌐 Publishes diagram to Confluence REST API
+
+│   ├── config/
+│   │   └── settings.py           # ⚙️ Claude model config (LLM_CONFIG)
+
+│   └── agents/                   # 🤖 All AutoGen agents
+│       ├── ba_agent.py           # 🧠 Extracts requirements
+│       ├── jira_agent.py         # 📌 Generates JIRA user stories
+│       ├── coder_agent.py        # 💻 Generates code (Python/YAML)
+│       ├── review_agent.py       # 🔍 Reviews generated code
+│       ├── devops_agent.py       # ⚙️ Generates GitLab CI/CD pipeline
+│       ├── supervisor_agent.py   # 🧭 Decides skip/run/HITL
+│       └── hitl_agent.py         # ✋ Waits for human approval
+
+├── agents.md                     # 📄 Documentation of each agent with purpose & examples
+├── README.md                     # 📘 Project overview, setup, architecture
+├── README_STEP_GUIDE.md         # 🧾 Step-by-step instructions to run the full pipeline
+
 ```
 
 ---
