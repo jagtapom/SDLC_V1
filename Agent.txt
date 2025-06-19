@@ -1,0 +1,113 @@
+# 🤖 Agent Overview
+
+This document summarizes each AutoGen agent used in the SDLC Automation system.
+
+---
+
+## 🧠 `ba_agent.py`
+- **Role:** Business Analyst Agent
+- **Purpose:** Extracts clear, structured requirements from uploaded documents (PDF, DOCX, TXT).
+- **Powered By:** Claude via Bedrock
+- **Input:** Raw business or regulatory content
+- **Output Example:**
+  ```text
+  - The system must allow users to upload a document.
+  - Uploaded documents must be scanned for sensitive terms like PII.
+  ```
+
+---
+
+## 📝 `jira_agent.py`
+- **Role:** JIRA Story Generator
+- **Purpose:** Converts structured requirements into JIRA-compatible user stories with acceptance criteria.
+- **Powered By:** Claude via Bedrock
+- **Input:** Requirements list from BA Agent
+- **Output Example:**
+  ```yaml
+  Story: Document Upload Feature
+  Description: As a user, I want to upload regulatory documents...
+  Acceptance Criteria:
+    - File formats supported: PDF, DOCX, TXT
+    - Size limit enforced (e.g., 10MB)
+  ```
+
+---
+
+## 🧑‍💻 `coder_agent.py`
+- **Role:** Code Generator
+- **Purpose:** Writes Python, YAML, or other boilerplate code based on JIRA stories
+- **Powered By:** Claude via Bedrock
+- **Input:** User story text
+- **Output Example:**
+  ```python
+  def validate_file(file):
+      assert file.size < 10_000_000
+  ```
+
+---
+
+## 🔍 `review_agent.py`
+- **Role:** Code Reviewer
+- **Purpose:** Reviews code output from the coder agent for clarity, standards, and potential bugs
+- **Powered By:** Claude via Bedrock
+- **Input:** Python/YAML code block
+- **Output Example:**
+  ```diff
+  + Consider adding MIME type validation
+  + Use logging instead of print()
+  ```
+
+---
+
+## ⚙️ `devops_agent.py`
+- **Role:** CI/CD Generator
+- **Purpose:** Produces GitLab-compatible `.gitlab-ci.yml` pipeline definitions
+- **Powered By:** Claude via Bedrock
+- **Input:** Project description or story
+- **Output Example:**
+  ```yaml
+  stages:
+    - build
+    - test
+    - deploy
+
+  build-job:
+    script:
+      - pip install -r requirements.txt
+  ```
+
+---
+
+## 🧭 `supervisor_agent.py`
+- **Role:** Agent Dispatcher
+- **Purpose:** Routes tasks to the correct agent by evaluating input context and deciding whether to skip or run
+- **Powered By:** Claude via Bedrock
+- **Input:** Task prompt + context
+- **Output Example:**
+  ```text
+  run ba_agent
+  skip coder_agent
+  ask hitl to confirm
+  ```
+
+---
+
+## ✋ `hitl_agent.py`
+- **Role:** Human-in-the-Loop Gatekeeper
+- **Purpose:** Waits for user approval before allowing agent output to continue through the pipeline
+- **UI Controlled:** NiceGUI frontend Approve buttons
+- **Output:** Emits approval event back to `orchestrator.py`
+
+---
+
+## 📐 Output Location:
+Each agent writes its result to:
+```
+/generated/{agent}_output.txt
+```
+
+Use these outputs to populate UI panels, generate diagrams, or create audit logs.
+
+---
+
+> For more details on each agent’s prompt or system behavior, check `src/agents/*.py`
