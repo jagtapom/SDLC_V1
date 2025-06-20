@@ -1,4 +1,4 @@
-# app.py (NiceGUI Frontend with 2-Column Layout)
+# app.py (UI with Spinner Status Badges + Step Placeholder Use)
 from nicegui import ui
 import requests
 import os
@@ -34,14 +34,10 @@ with ui.row().style("width: 100%; gap: 24px"):
 
         # Agent status badges
         with ui.row().style("gap: 10px"):
-            status_badges = {
-                'ba': ui.badge('BA: ⏳ Waiting...', color='grey'),
-                'jira': ui.badge('JIRA: ⏳ Waiting...', color='grey'),
-                'code': ui.badge('Code: ⏳ Waiting...', color='grey'),
-                'review': ui.badge('Review: ⏳ Waiting...', color='grey'),
-                'devops': ui.badge('DevOps: ⏳ Waiting...', color='grey'),
-                'supervisor': ui.badge('Supervisor: ⏳ Waiting...', color='grey'),
-            }
+            status_badges = {}
+            for step in approval_status:
+                badge = ui.badge(f'{step.upper()}: ⏳ Pending...', color='orange')
+                status_badges[step] = badge
 
         agent_outputs = {
             'ba': ui.expansion('📋 BA Agent Output', value=True),
@@ -148,6 +144,8 @@ async def fetch_outputs():
                 content = open(file, 'r', encoding='utf-8').read()
                 if content.strip():
                     agent_textareas[step].value = content
+                    status_badges[step].text = f"{step.upper()}: 📝 Ready"
+                    status_badges[step].props('color=blue')
                     append_timeline(f"📥 {step.upper()} output loaded.")
         if os.path.exists("generated/requirement_diagram.mmd"):
             with open("generated/requirement_diagram.mmd", "r") as df:
