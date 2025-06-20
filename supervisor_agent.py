@@ -22,14 +22,14 @@
 # )
 # src/agents/supervisor_agent.py
 
-from autogen import SupervisorAgent
+# src/agents/supervisor_agent.py
+
+from autogen.agentchat.contrib.supervisor_agent import SupervisorAgent
 from src.config.settings import LLM_CONFIG
 from src.agents.jira_agent import jira_agent
 from src.agents.coder_agent import coder_agent
 from src.agents.review_agent import review_agent
 from src.agents.devops_agent import devops_agent
-
-# Optional: include other agents like ba_agent if needed
 
 def build_supervisor(prompt: str = ""):
     return SupervisorAgent(
@@ -41,5 +41,6 @@ def build_supervisor(prompt: str = ""):
             review_agent,
             devops_agent
         ],
-        system_message="You are the SDLC supervisor. Based on the given context, decide whether to run or skip the specific agent, or defer to HITL. Use judgment based on the task, its value, and the business logic."
+        system_message="You are the SDLC supervisor. Based on the given context, decide whether to run or skip the specific agent, or defer to HITL."
     )
+
