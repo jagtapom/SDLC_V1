@@ -1,49 +1,72 @@
-# app.py (With Comments for Full Understanding)
+# app.py (Enhanced UI Styling + Log Section Moved Right)
 from nicegui import ui
 import requests
 import os
-import base64
 from datetime import datetime
 
-# === GLOBAL VARIABLES ===
-file_path = None  # path to uploaded file
-log_box_tail = ""  # running log string
-approval_status = {'ba': False, 'jira': False, 'code': False, 'review': False, 'devops': False, 'supervisor': False}  # step tracking
+file_path = None
+log_box_tail = ""
+approval_status = {'ba': False, 'jira': False, 'code': False, 'review': False, 'devops': False, 'supervisor': False}
 
-# === LAYOUT: Split row into 2 columns ===
+ui.add_head_html("""
+<style>
+    .custom-button {
+        background-color: #0072CE;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 14px;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+    .custom-button:hover {
+        background-color: #005999;
+    }
+    .log-container {
+        background-color: #f9f9f9;
+        border-left: 3px solid #0072CE;
+        padding: 8px;
+        border-radius: 6px;
+    }
+    .badge-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+</style>
+""")
+
+# === MAIN LAYOUT ===
 with ui.row().style("width: 100%; gap: 24px"):
 
-    # === LEFT COLUMN ===
+    # LEFT PANEL
     with ui.column().style("min-width: 300px; gap: 12px"):
 
         ui.image('https://upload.wikimedia.org/wikipedia/en/thumb/3/3e/Barclays_Logo.svg/1920px-Barclays_Logo.svg.png').style('width: 140px')
+        status_label = ui.label('Status: Waiting for document upload...')
 
-        status_label = ui.label('Status: Waiting for document upload...')  # Status header
-
-        # File upload + input
         uploaded_file = ui.upload(label='Upload PDF/DOCX/TXT', on_upload=lambda e: handle_upload(e))
         keyword_input = ui.input(label='Optional Keyword (e.g., loan, finance)')
-        ui.button('🚀 Start SDLC Workflow', on_click=lambda: trigger_supervisor())
+        ui.button('🚀 Start SDLC Workflow', on_click=lambda: trigger_supervisor()).classes('custom-button')
 
-        # Timeline panel for real-time log updates
         ui.separator()
-        ui.label('Status Timeline:').style("font-weight: bold; margin-top: 8px")
+        ui.label('📜 Timeline').style("font-weight: bold; margin-top: 8px")
         status_timeline = ui.column().style('height: 300px; overflow-y: auto;')
 
-    # === RIGHT COLUMN ===
+    # RIGHT PANEL
     with ui.column().style("flex: 1; gap: 14px"):
 
-        # Full log view
-        log_box = ui.textarea(label='Logs', value='').props('rows=12 auto-grow').style('width: 100%')
-
-        # Badge for each agent step
-        with ui.row().style("gap: 10px"):
+        # Status badges
+        with ui.element("div").classes("badge-row"):
             status_badges = {}
             for step in approval_status:
                 badge = ui.badge(f'{step.upper()}: ⏳ Pending...', color='orange')
                 status_badges[step] = badge
 
-        # Expandable agent output areas
+        # Agent output expansions
         agent_outputs = {
             'ba': ui.expansion('📋 BA Agent Output', value=True),
             'jira': ui.expansion('📌 JIRA Story Output', value=False),
@@ -52,22 +75,20 @@ with ui.row().style("width: 100%; gap: 24px"):
             'devops': ui.expansion('🔧 DevOps Pipeline Output', value=False),
         }
 
-        # Create a textarea + approval button per agent
         agent_textareas = {}
         for step in agent_outputs:
             with agent_outputs[step]:
-                agent_textareas[step] = ui.textarea(label=f'{step.upper()} Output', value='').props('rows=10')
-                ui.button(f'✅ Approve {step.upper()}', on_click=lambda s=step: approve_step(s))
+                agent_textareas[step] = ui.textarea(label=f'{step.upper()} Output', value='').props('rows=8')
+                ui.button(f'✅ Approve {step.upper()}', on_click=lambda s=step: approve_step(s)).classes('custom-button')
 
-        # Supervisor special handling
+        # Supervisor section
         with ui.expansion('🧠 Supervisor Decision Requires Human Approval', value=False):
             supervisor_panel = ui.textarea(label='Supervisor uncertainty - human decision required', value='').props('rows=4')
-            ui.button('✅ Confirm Supervisor Decision', on_click=lambda: approve_step('supervisor'))
+            ui.button('✅ Confirm Supervisor Decision', on_click=lambda: approve_step('supervisor')).classes('custom-button')
 
-        # Mermaid diagram viewer and download
+        # Mermaid diagram
         with ui.expansion('📊 Requirement Diagram (Mermaid)', value=False):
-            diagram_box = ui.textarea(label='Mermaid Diagram Code', value='').props('rows=12')
-
+            diagram_box = ui.textarea(label='Mermaid Diagram Code', value='').props('rows=10')
             def download_diagram():
                 try:
                     with open('generated/requirement_diagram.mmd', 'r') as f:
@@ -75,32 +96,31 @@ with ui.row().style("width: 100%; gap: 24px"):
                     ui.download(text=content, filename='requirement_diagram.mmd', mime_type='text/plain')
                 except FileNotFoundError:
                     append_log("[WARN] Mermaid diagram not found.")
+            ui.button('📥 Download Mermaid Diagram', on_click=download_diagram).classes('custom-button')
 
-            ui.button('📥 Download Mermaid Diagram', on_click=download_diagram)
-
+        # Log section now here
+        ui.separator()
+        ui.label('🪵 Agent Logs').style("font-weight: bold")
+        with ui.element("div").classes("log-container"):
+            log_box = ui.textarea(label='', value='').props('rows=10 auto-grow').style('width: 100%')
 
 # === HELPERS ===
-
 def append_log(msg):
-    """Append text to log box."""
     global log_box_tail
     log_box_tail += f"\n{msg}"
     log_box.value = log_box_tail
 
 def append_timeline(message, error=False):
-    """Append message to status timeline."""
     now = datetime.now().strftime('%H:%M:%S')
     color = 'red' if error else 'black'
     with status_timeline:
         ui.label(f"[{now}] {message}").style(f'color: {color}; font-size: 13px')
 
 def handle_upload(e):
-    """Handle file upload and save."""
     global file_path
     try:
         upload_dir = "uploaded_files"
-        if not os.path.exists(upload_dir):
-            os.makedirs(upload_dir)
+        os.makedirs(upload_dir, exist_ok=True)
         file_path = os.path.join(upload_dir, e.name)
         with open(file_path, 'wb') as f:
             content = e.content if isinstance(e.content, bytes) else e.content.read()
@@ -114,7 +134,6 @@ def handle_upload(e):
         append_timeline(f"❌ Upload failed: {err}", error=True)
 
 def trigger_supervisor():
-    """Start backend workflow via API."""
     global file_path
     if not file_path or not os.path.exists(file_path):
         append_log(f"[ERROR] File not found: {file_path}")
@@ -122,16 +141,12 @@ def trigger_supervisor():
         append_timeline("❌ File missing. Upload first.", error=True)
         return
     try:
-        response = requests.post('http://localhost:8000/start-workflow', json={
-            'file_path': file_path,
-            'keyword': keyword_input.value or ""
-        })
+        response = requests.post('http://localhost:8000/start-workflow', json={'file_path': file_path, 'keyword': keyword_input.value or ""})
         response.raise_for_status()
-        msg = response.json().get('message')
-        append_log(f"✅ Workflow started: {msg}")
+        append_log("✅ Workflow triggered")
         status_label.text = 'Status: Workflow triggered.'
         append_timeline("🚀 Workflow triggered.")
-        ui.timer(2.0, lambda: fetch_outputs(), once=False)  # start polling
+        ui.timer(2.0, lambda: fetch_outputs(), once=False)
     except Exception as e:
         append_log(f"[ERROR] Backend call failed: {e}")
         ui.notify(f"Trigger failed: {e}", type='negative')
@@ -139,7 +154,6 @@ def trigger_supervisor():
         append_timeline(f"❌ Trigger failed: {e}", error=True)
 
 def approve_step(step):
-    """Submit approval for a specific step to backend."""
     try:
         requests.post('http://localhost:8000/approve-step', json={'step': step})
         approval_status[step] = True
@@ -155,7 +169,6 @@ def approve_step(step):
         append_timeline(f"❌ Approval error: {e}", error=True)
 
 async def fetch_outputs():
-    """Poll and fetch outputs from each agent periodically."""
     try:
         for step in agent_textareas:
             file = f"generated/{step}_output.txt"
@@ -175,5 +188,4 @@ async def fetch_outputs():
         ui.notify(f"Fetching failed: {e}", type='negative')
         append_timeline(f"❌ Fetching error: {e}", error=True)
 
-# === RUN UI ===
 ui.run()
