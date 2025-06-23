@@ -30,14 +30,18 @@ async def run_workflow_async(file_path: str, keyword: str):
         f"**Keyword Used:** {keyword or 'None'}",
         "---"
     ]
-
+    os.makedir("generated",exist_ok=True)
     content = extract_text(file_path, keyword)
     report_lines.append("## 📋 BA Extracted Requirement")
     report_lines.append(content.strip())
 
-    await run_supervised_step('ba', ba_agent, content)
+    await run_supervised_step('ba', ba_agent, content, step_outputs=step_outputs)
+    with open("generated/jira_output.txt", "w" , encoding="utf-8") as f:
+        f.write(content)
 
-    await run_supervised_step('jira', jira_agent)
+    await run_supervised_step('jira', jira_agent,step_outputs=step_outputs)
+    with open("generated/ba_output.txt", "w" , encoding="utf-8") as f:
+        f.write(step_outputs.get('jira',''))
     report_lines.append("\n## 📌 JIRA Stories")
     report_lines.append(jira_agent.last_output or "*No output captured*")
 
@@ -46,17 +50,23 @@ async def run_workflow_async(file_path: str, keyword: str):
         report_lines.append("\n## 🧠 Code Generation")
         report_lines.append("*Skipped by supervisor.*")
     else:
-        await run_supervised_step('code', coder_agent)
+        await run_supervised_step('code', coder_agent,step_outputs=step_outputs)
+        with open("generated/code_output.txt", "w" ,encoding="utf-8") as f:
+            f.write(step_outputs.get('code',''))
         report_lines.append("\n## 🧠 Code Output")
         report_lines.append(coder_agent.last_output or "*No output captured*")
 
     async def gather_review():
-        await run_supervised_step('review', review_agent)
+        await run_supervised_step('review', review_agent,step_ouputs=step_outputs)
+        with open("generated/review_output.txt", "w" ,encoding="utf-8") as f:
+            f.write(step_outputs.get('review,''))
         report_lines.append("\n## 🔍 Code Review")
         report_lines.append(review_agent.last_output or "*No review captured*")
 
     async def gather_devops():
-        await run_supervised_step('devops', devops_agent)
+        await run_supervised_step('devops', devops_agent, step_outputs=step_outputs)
+        with open("generated/devops_output.txt", "w" ,encoding="utf-8") as f:
+            f.write(step_outputs.get('devops',''))
         report_lines.append("\n## 🔧 DevOps CI/CD YAML")
         report_lines.append(devops_agent.last_output or "*No pipeline output captured*")
 
@@ -89,6 +99,15 @@ async def run_supervised_step(step: str, target_agent, user_input: str = None):
     print(f"Waiting for HITL approval: {step}...")
     await state['approvals'][step].wait()
     print(f"[HITL] {step.upper()} step approved ✅")
+    if groupchat.messages and len(grouchat.messages)>0:
+        if step_outputs is not None:
+        last_msg = groupchat.messages[-1].get("content","")
+        step_outputs[step] = last_msg.strip()
+    else:
+        print(f"[Warn] No messages found for step '{step} '")
+        if step_outputs is not None:
+          step_outputs[step] = "* No output captured"
+        
 
 async def run_parallel_steps(agent_steps):
     tasks = []
@@ -108,7 +127,14 @@ async def evaluate_supervisor_skip(step, context):
     )
     manager = GroupChatManager(groupchat=groupchat)
     await asyncio.to_thread(manager.run)
-    last_msg = manager.chat.messages[-1]["content"].lower()
+    if grouchat.messages:    
+      last_msg = manager.chat.messages[-1]["content"].lower()
+    else:
+        print(f"[Warm] No messages found for supervisor evaluation on '{step}'")
+        last_msg = ""
+    if f" skip {step}_agent" in last_msg:
+                return True
+            
 
     if f"skip {step}_agent" in last_msg:
         return True
