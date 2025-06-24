@@ -1,0 +1,76 @@
+**Subject:** Contribution Summary & Promotion Justification – Omkar Jagtap
+
+**Period Covered:** July 2024 – June 2025
+
+---
+
+### 1. Executive Overview
+
+Over the past twelve months I have delivered strategic technical solutions, strengthened DevSecOps standards, and championed innovation initiatives that directly support our organisation’s goals for secure, automated, and data-driven software delivery. My work spans enterprise build-and-release engineering, cloud-native security, generative-AI R\&D, and cross-team enablement. The impact is measurable: faster delivery cycles, reduced operational risk, and demonstrable leadership recognised across functions. I have also received multiple recognitions from Directors and Engineering Leads for impactful contributions across projects.
+
+Additionally, I have successfully completed all mandatory trainings ahead of deadlines. Transitioning from an SAP background into deep expertise in Generative AI technologies has significantly enhanced my technical breadth and has proven to be a value multiplier for current and future organisational initiatives.
+
+---
+
+### 2. Key Project Contributions
+
+| Area                                  | Contribution                                                                                                                                                                                                                                                                                                                                                                                        | Impact                                                                                                            |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Data Analysis Tool**                | - Designed and shipped new features, resolved legacy defects, and presented an end-to-end working model to the Director and leads.                                                                                                                                                                                                                                                                  | Adopted as the primary analytics workflow; decreased manual reporting time by 40%.                                |
+| **Enterprise Dev Platform (EDP)**     | • Standardised **Nexus Repository** across the organisation; created directory structures, onboarding guide, and governance model.<br>• Built GitLab CI/CD pipelines to publish artefacts to Nexus and generate binaries on our on-prem servers.<br>• Modernised and productionised multiple **Jenkins** pipelines, segregating services for maintainability.                                       | 60% reduction in build failures; 35% faster deployment cadence; consistent artefact management across all squads. |
+| **Security & Compliance**             | Authored a step-by-step guide for private/public key rotation via **UKM** portal and established breach-remediation runbook.                                                                                                                                                                                                                                                                        | Eliminated recurring key-rotation incidents and improved audit readiness.                                         |
+| **Cloud Strategy & Migration**        | Core member of account migration to **Cloud Service Management (CSM)**; devised safe-creation logic, staged rollout, and cross-team knowledge-sharing sessions.                                                                                                                                                                                                                                     | Seamless migration of 200+ repos with zero production downtime; strengthened IAM posture.                         |
+| **AWS Skylight Support**              | Diagnosed and resolved service-health issues affecting multiple workloads.                                                                                                                                                                                                                                                                                                                          | Restored full availability within SLA; documented root-cause and mitigation.                                      |
+| **Generative AI for SDLC Automation** | • Defined target architecture and microservice breakdown.<br>• Ran comparative analysis of **CrewAI vs AutoGen** and **Streamlit vs NiceGUI**, delivering PoCs to guide stack decisions.<br>• Implemented core automation code (agent orchestration, HITL flows).<br>• Created GitLab pipelines and deployed services on **Amazon EKS**, handling IAM role creation and access control integration. | Positioned team to automate 50% of story-grooming effort; prototype approved for pilot rollout Q3 FY26.           |
+| **Hackathon 2025**                    | Led “AI Assistant Development Enhancer” team; secured **1st place** by automating Jira story creation.                                                                                                                                                                                                                                                                                              | Recognised by leadership; moving concept to internal incubation.                                                  |
+
+---
+
+### 3. Leadership & Collaboration
+
+* Delivered technical demos and knowledge-sharing sessions to engineering, security, and leadership cohorts.
+* Mentored junior engineers on CI/CD best practices and GenAI frameworks.
+* Facilitated inter-team alignment workshops for GitLab rollout, capturing best practices and lessons learned.
+* Recognised multiple times by Directors and Senior Leadership for outstanding delivery, ownership, and solutioning.
+
+---
+
+### 4. Upskilling & Certifications
+
+* **AWS Certified Solutions Architect – Associate** (Apr 2025)
+* Experienced-level **Generative AI** training; Agentic AI & Chatbot specialisations
+* **GitLab & GitLab Duo** advanced workshops (2025)
+* **Python for Data Analytics** – Advanced (Pluralsight)
+* **Creative Thinking for Innovation** – Coursera
+* **Scrum Master Fundamentals** – Pluralsight (Feb 2025)
+* Completed all **mandatory organisation-wide trainings** ahead of schedule
+
+---
+
+### 5. Quantifiable Outcomes
+
+* **35 %** decrease in CI/CD pipeline duration (Jenkins → GitLab migration).
+* **60 %** fewer build failures post-pipeline segregation.
+* **40 %** reduction in manual analytics reporting time via new Data Analysis Tool.
+* Achieved **100 %** pass-rate on internal security audits for key-management procedures.
+
+---
+
+### 6. Next-Year Focus
+
+1. Deliver GenAI-powered SDLC automation MVP to two pilot squads by Q3 FY26.
+2. Integrate SAST & DAST security gates into GitLab pipelines.
+3. Pursue **AWS DevOps Engineer – Professional** certification.
+4. Continue mentoring and expand cross-team enablement initiatives.
+
+---
+
+### 7. Promotion Recommendation
+
+Given the breadth and depth of my contributions—ranging from enterprise-scale DevSecOps improvements to award-winning innovation—I respectfully submit this documentation in support of my promotion to **Senior Engineer / AVP**. I am confident that my continued leadership and technical expertise will further accelerate our organisation’s goals.
+
+---
+
+*Prepared by:* **Omkar Jagtap**
+
+*Date:* 24 June 2025
