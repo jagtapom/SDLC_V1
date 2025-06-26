@@ -1,13 +1,48 @@
 # #src/tools/story_to_confluence_diagram.py
-import requests
 import json
+import os
+import requests
+from typing import List, Dict
+from pathlib import Path
+
+def load_user_stories(stories_path: str) -> List[Dict]:
+    """Load user stories from a JSON file."""
+    if not os.path.exists(stories_path):
+        raise FileNotFoundError(f"Stories file not found: {stories_path}")
+    with open(stories_path, 'r') as f:
+        return json.load(f)
+
+def generate_mermaid_from_stories(stories: List[Dict]) -> str:
+    """Generate Mermaid diagram content from user stories."""
+    nodes = []
+    links = []
+
+    for i, story in enumerate(stories):
+        node_id = f"N{i}"
+        summary = story["summary"].replace('"', "'")
+        nodes.append(f'{node_id}["{summary}"]')
+        if i > 0:
+            links.append(f"N{i-1} --> {node_id}")
+
+    diagram_lines = ["graph TD"] + nodes + links
+    return "\n".join(diagram_lines)
+
+def wrap_mermaid_as_confluence_macro(mermaid_code: str) -> str:
+    """Wrap Mermaid code in Confluence-compatible storage format."""
+    return f"""
+<ac:structured-macro ac:name="mermaid">
+  <ac:plain-text-body><![CDATA[
+{mermaid_code}
+  ]]></ac:plain-text-body>
+</ac:structured-macro>
+"""
 
 def publish_to_confluence(base_url, page_id, username, api_token, new_content):
+    """Publish updated content to a Confluence page using REST API."""
     headers = {
         "Content-Type": "application/json"
     }
 
-    # Get current page version
     res = requests.get(
         f"{base_url}/rest/api/content/{page_id}?expand=body.storage,version",
         auth=(username, api_token)
@@ -16,7 +51,6 @@ def publish_to_confluence(base_url, page_id, username, api_token, new_content):
     data = res.json()
     current_version = data["version"]["number"]
 
-    # Update page with new content
     payload = {
         "id": page_id,
         "type": "page",
@@ -38,6 +72,19 @@ def publish_to_confluence(base_url, page_id, username, api_token, new_content):
     )
     update_res.raise_for_status()
     return update_res.status_code == 200
+
+def process_and_publish_diagram(stories_path: str, confluence_url: str, confluence_page_id: str,
+                                username: str, api_token: str) -> str:
+    """High-level function to convert stories to diagram and publish to Confluence."""
+    stories = load_user_stories(stories_path)
+    mermaid_code = generate_mermaid_from_stories(stories)
+    wrapped = wrap_mermaid_as_confluence_macro(mermaid_code)
+    success = publish_to_confluence(confluence_url, confluence_page_id, username, api_token, wrapped)
+    if success:
+        return "Diagram successfully published to Confluence ✅"
+    else:
+        raise RuntimeError("Failed to publish to Confluence")
+
 
 # import os
 # import json
