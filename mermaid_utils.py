@@ -1,24 +1,25 @@
 import json
 import requests
+from setting import get_bedrock_llm
 
 def generate_mermaid_from_stories(stories):
     """
-    Converts a list of user stories into a Mermaid flowchart.
+    Converts a list of user stories into a Mermaid diagram using a Bedrock-hosted LLM.
     """
     if not isinstance(stories, list):
         return "graph TD\nA[Invalid Story Format]"
 
-    nodes = []
-    edges = []
+    llm = get_bedrock_llm()
+    prompt = (
+        "You are a software analyst. Based on the following user stories, "
+        "generate a Mermaid diagram in `graph TD` format that visually represents "
+        "the flow or relationship between these stories.\n\n"
+        f"{json.dumps(stories, indent=2)}"
+    )
 
-    for idx, story in enumerate(stories):
-        sid = f"S{idx}"
-        summary = story.get("summary", f"Story {idx}")
-        nodes.append(f"{sid}[{summary}]")
-        if idx > 0:
-            edges.append(f"S{idx-1} --> {sid}")
-
-    return "graph TD\n" + "\n".join(nodes + edges)
+    response = llm.invoke(prompt)
+    diagram = response.get("output", "graph TD\nA[No response from LLM]")
+    return diagram
 
 def preview_confluence_page(base_url, page_id, username, password):
     url = f"{base_url}/rest/api/content/{page_id}?expand=version,space"
